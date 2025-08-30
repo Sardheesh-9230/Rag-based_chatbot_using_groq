@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuBot - Intelligent Document Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='chat.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 DocuBot</h1>
+            <a href="{{ url_for('index') }}" class="back-link">← Back to Upload</a>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <p>Welcome to DocuBot! Ask me questions about your uploaded documents.</p>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <input type="text" id="messageInput" placeholder="Ask DocuBot about your documents..." autocomplete="off">
+            <button id="sendButton" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='chat.js') }}"></script>
+</body>
+</html>

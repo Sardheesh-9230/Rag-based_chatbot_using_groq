@@ -1,0 +1,17 @@
+groq
+faiss-cpu
+langchain
+langchain-groq
+langchain-community
+sentence-transformers
+numpy
+pandas
+pickle-mixin
+python-dotenv
+pypdf2
+flask
+unstructured
+flask
+flask
+flask
+werkzeug

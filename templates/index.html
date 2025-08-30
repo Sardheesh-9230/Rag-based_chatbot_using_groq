@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuBot - Document Upload</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            padding-top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .header h1 {
+            color: #333;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        .header .subtitle {
+            color: #667eea;
+            font-weight: 500;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 15px;
+            margin-bottom: 5px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .hidden {
+            display: none;
+        }
+        .btn-process {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .file-icon {
+            margin-right: 10px;
+        }
+        .pdf-icon {
+            color: #e74c3c;
+        }
+        .txt-icon {
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 DocuBot</h1>
+            <p class="subtitle">Intelligent Document Q&A System</p>
+            <p class="text-muted">Upload PDF and text files to train your DocuBot</p>
+        </div>
+
+        <!-- Flash Messages -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="uploadArea">
+            <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-primary"></i>
+            <h4>Drag & Drop Files Here</h4>
+            <p class="text-muted">or</p>
+            <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="mb-3">
+                    <input class="form-control" type="file" id="fileInput" name="file" multiple accept=".pdf,.txt" hidden>
+                    <button type="button" class="btn btn-primary" id="browseBtn">Browse Files</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- File List -->
+        <div class="file-list">
+            <h5>Uploaded Files</h5>
+            {% if files %}
+                {% for file in files %}
+                    <div class="file-item">
+                        <div>
+                            {% if file.endswith('.pdf') %}
+                                <i class="fas fa-file-pdf file-icon pdf-icon"></i>
+                            {% elif file.endswith('.txt') %}
+                                <i class="fas fa-file-alt file-icon txt-icon"></i>
+                            {% endif %}
+                            {{ file }}
+                        </div>
+                        <form action="{{ url_for('delete_file', filename=file) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" title="Delete file">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No files uploaded yet</p>
+            {% endif %}
+        </div>
+
+        <!-- Process Button -->
+        <div class="text-center mt-4">
+            <form action="{{ url_for('process_documents') }}" method="post">
+                <button type="submit" class="btn btn-success btn-lg btn-process" {% if not files %}disabled{% endif %}>
+                    <i class="fas fa-cogs me-2"></i> Process Documents & Build DocuBot Index
+                </button>
+            </form>
+            {% if index_exists %}
+                <p class="text-success mt-2">
+                    <i class="fas fa-check-circle"></i> DocuBot index has been created successfully!
+                </p>
+                <p class="text-muted">
+                    You can now chat with DocuBot about your documents
+                </p>
+                <a href="{{ url_for('chat_page') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-comments me-2"></i> Start Chatting with DocuBot
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // File upload handling
+        document.getElementById('browseBtn').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function() {
+            if (this.files.length > 0) {
+                document.getElementById('uploadForm').submit();
+            }
+        });
+
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#007bff';
+            uploadArea.style.backgroundColor = '#f0f7ff';
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ccc';
+            uploadArea.style.backgroundColor = '';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ccc';
+            uploadArea.style.backgroundColor = '';
+            
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                document.getElementById('uploadForm').submit();
+            }
+        });
+
+        // Function to run the chatbot
+        function runChatbot() {
+            const runWindow = window.open('', '_blank');
+            runWindow.document.write('<html><head><title>Starting DocuBot</title></head><body>');
+            runWindow.document.write('<h3>Starting DocuBot...</h3>');
+            runWindow.document.write('<p>Please check your terminal window. DocuBot is now running.</p>');
+            runWindow.document.write('</body></html>');
+            
+            fetch('/run_chatbot')
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        runWindow.document.write('<p class="text-success">DocuBot started successfully!</p>');
+                    } else {
+                        runWindow.document.write('<p class="text-danger">Error starting DocuBot: ' + data.error + '</p>');
+                    }
+                })
+                .catch(error => {
+                    runWindow.document.write('<p class="text-danger">Error: ' + error + '</p>');
+                });
+        }
+    </script>
+</body>
+</html>

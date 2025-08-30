@@ -173,9 +173,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 If you encounter any issues or have questions:
-- 🐛 [Report bugs](https://github.com/yourusername/docubot/issues)
-- 💡 [Request features](https://github.com/yourusername/docubot/issues)
-- 📧 Contact: your.email@example.com
+- 🐛 [Report bugs]
+- 💡 [Request features]
+- 📧 Contact:sardheeshmuthusamy@gmail.com
 
 ---
 
